@@ -1,3 +1,4 @@
+
 package com.wocus.bmap;
 
 import android.app.DatePickerDialog;
@@ -64,7 +65,7 @@ public class BMapActivity extends AppCompatActivity {
 
     private Double mileage;//总里程
 
-    private ImageButton btnStart, btnStop, imageButton,btnEarth;//开始停止信息
+    private ImageButton btnStart, btnStop, imageButton, btnEarth;//开始停止信息
 
     private ProgressBar progressBar;//进度条
 
@@ -82,11 +83,11 @@ public class BMapActivity extends AppCompatActivity {
 
     private int timeSize = 50;//播放速度50快100普通200慢
 
-    private int STOP_STATE=0;//1按了停止   0 没按停止
+    private int STOP_STATE = 0;//1按了停止   0 没按停止
 
-    private int MAP_STATE=1;  //1普通地图  2  卫星地图
+    private int MAP_STATE = 1;  //1普通地图  2  卫星地图
 
-    private int LOCAL_TYPE=0;//0全部  1GPS  2WIFI   3LBS
+    private int LOCAL_TYPE = 0;//0全部  1GPS  2WIFI   3LBS
 
 
     @Override
@@ -125,12 +126,12 @@ public class BMapActivity extends AppCompatActivity {
         btnEarth.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (MAP_STATE==1){
+                if (MAP_STATE == 1) {
                     mBaiduMap.setMapType(BaiduMap.MAP_TYPE_SATELLITE);
-                    MAP_STATE=2;
-                }else{
+                    MAP_STATE = 2;
+                } else {
                     mBaiduMap.setMapType(BaiduMap.MAP_TYPE_NORMAL);
-                    MAP_STATE=1;
+                    MAP_STATE = 1;
                 }
             }
         });
@@ -152,9 +153,9 @@ public class BMapActivity extends AppCompatActivity {
         txtPlayBack.setOnClickListener(onClickListener);
         txtStop.setOnClickListener(onClickListener);
         txtShow.setOnClickListener(onClickListener);
-        String time=new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-        txtStartTime.setText(time+" 00:00");
-        txtEndTime.setText(time+" 23:59");
+        String time = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        txtStartTime.setText(time + " 00:00");
+        txtEndTime.setText(time + " 23:59");
         new AlertDialog.Builder(BMapActivity.this)
                 .setView(view)
                 .setMessage("回放选项")
@@ -171,7 +172,7 @@ public class BMapActivity extends AppCompatActivity {
                             Toast.makeText(BMapActivity.this, "相差不能大于24小时", Toast.LENGTH_LONG).show();
                         } else {
                             mBaiduMap.clear();
-                            runLocal=getData();
+                            runLocal = getData();
                             if (showType == 1) {
                                 initDot();
                                 startDot();
@@ -184,7 +185,7 @@ public class BMapActivity extends AppCompatActivity {
                                 isDot = true;
                                 startWire();
                             }
-                            mileage=0.0;
+                            mileage = 0.0;
                             btnStart.performClick();
                         }
                     }
@@ -254,7 +255,7 @@ public class BMapActivity extends AppCompatActivity {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     txtLocalType.setText(item[which]);
-                                    LOCAL_TYPE=which;
+                                    LOCAL_TYPE = which;
                                 }
                             })
                             .create()
@@ -388,6 +389,7 @@ public class BMapActivity extends AppCompatActivity {
                 list.add(new LatLng(x, y));
             }
         }
+        list.add(getLatLng(local2));
         return list;
     }
 
@@ -456,16 +458,16 @@ public class BMapActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (STATE == 1) {
-                    if (STOP_STATE==1){
+                    if (STOP_STATE == 1) {
                         mBaiduMap.clear();
                         marker = (Marker) mBaiduMap.addOverlay(new MarkerOptions().position(runPoints.get(0)).icon(BitmapDescriptorFactory.fromResource(icon)));
                         mBaiduMap.setMapStatus(MapStatusUpdateFactory.newMapStatus(new MapStatus.Builder().zoom(18f).build()));//定义层级
                         mBaiduMap.setMapStatus(MapStatusUpdateFactory.newLatLng(runPoints.get(0)));//定位显示到初始地点
-                        STOP_STATE=0;
+                        STOP_STATE = 0;
                         progressBar.setProgress(0);
                     }
                     //mBaiduMap.setMapStatus(MapStatusUpdateFactory.newLatLng(runPoints.get(index)));//定位显示到初始地点
-                    mileage = mileage+DistanceUtil.getDistance(runPoints.get(index), runPoints.get(index+1));
+                    mileage = mileage + DistanceUtil.getDistance(runPoints.get(index), runPoints.get(index + 1));
                     StringBuffer sb = new StringBuffer();
                     sb.append("时速：");
                     sb.append(runLocal.get(index).getSpd() + "KM ");//速度
@@ -505,11 +507,13 @@ public class BMapActivity extends AppCompatActivity {
                 list_int = new ArrayList<>();
                 options = new ArrayList<LatLng>();
                 options.add(runPoints.get(index));
+
                 STATE = 1;
-                STOP_STATE=1;
+                STOP_STATE = 1;
             }
         });
     }
+
 
     int cav_index = 0;
     List<LatLng> list_cav = new ArrayList<>();
@@ -534,31 +538,42 @@ public class BMapActivity extends AppCompatActivity {
     }
 
 
+    /**
+     * 循环绘制线段
+     * @param latLng
+     * @param color_index
+     */
     private void cav(final List<LatLng> latLng, final int color_index) {
-        cav_polyline = null;
+        cav_polyline=null;//小线段
         timer = new Timer();
         final List<Integer> list_cav_int = new ArrayList<>();
         list_cav = new ArrayList<>();
         if (latLng.size() != 0)
-            list_cav.add(latLng.get(0));
+            list_cav.add(latLng.get(0));//添加小线段颜色
+        //添加小线段起点
         list_cav_int.add(color_index);
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                if (cav_index == latLng.size() - 1 || latLng.size() == 0) {
+                //当小线段的索引值达到 最大线段的数量，或者小线段==0的时候
+                if (cav_index == latLng.size() || latLng.size() == 0) {
                     timer.cancel();
                     cav_index = 0;
-                    if (index != runPoints.size() - 1) {
+
                         index++;
-                        list_cav = new ArrayList<>();
-                        list_int.add(Integer.parseInt(runLocal.get(index).getSource()));
                         options.add(runPoints.get(index));
+                        //list_cav = new ArrayList<>();
+                        list_int.add(Integer.parseInt(runLocal.get(index-1).getSource()));
                         //mBaiduMap.clear();
                         //mBaiduMap.setMapStatus(MapStatusUpdateFactory.newLatLng(runPoints.get(index)));//定位显示到初始地点
                         if (polyline != null) polyline.remove();
                         polyline = (Polyline) mBaiduMap.addOverlay(new PolylineOptions().width(10).points(options).dottedLine(true).customTextureList(runBitmap).textureIndex(list_int));//画线
-                        if (index!=0)
-                            mileage += DistanceUtil.getDistance(options.get(index-1), options.get(index));
+                    Log.d("TAG","开始画小线"+index);
+                    Log.d("TAG","开始画大线"+options.size());
+                    Log.d("TAG","开始画大线颜色"+list_int.size());
+                        if (cav_polyline!=null) cav_polyline.remove();
+                        if (index != 0)
+                            mileage += DistanceUtil.getDistance(options.get(index - 1), options.get(index));
                         StringBuffer sb = new StringBuffer();
                         sb.append("时速：");
                         sb.append(runLocal.get(index).getSpd() + "KM ");//速度
@@ -572,7 +587,11 @@ public class BMapActivity extends AppCompatActivity {
                         bundle.putString("time", runLocal.get(index).getUpdatetime());
                         message.setData(bundle);
                         myHandler.sendMessage(message);
-                        progressBar.setProgress(index + 1);
+                        progressBar.setProgress(index);
+
+
+
+                    if (index != runPoints.size() - 1) {
                         try {
                             if (timeMin > 0) {
                                 if (isDot) {
@@ -598,8 +617,8 @@ public class BMapActivity extends AppCompatActivity {
                             } else {
                                 if (isDot) {
                                     int resource = getGPStoImage(localType(runLocal.get(index).getSource()));
-                                    MarkerOptions options = new MarkerOptions().position(getLatLng(runLocal.get(index))).icon(BitmapDescriptorFactory.fromResource(resource));
-                                    Marker m = (Marker) mBaiduMap.addOverlay(options);
+                                    MarkerOptions optionss = new MarkerOptions().position(getLatLng(runLocal.get(index))).icon(BitmapDescriptorFactory.fromResource(resource));
+                                    Marker m = (Marker) mBaiduMap.addOverlay(optionss);
                                     Bundle bundle1 = new Bundle();
                                     bundle1.putInt("index", index);
                                     m.setExtraInfo(bundle1);
@@ -608,8 +627,9 @@ public class BMapActivity extends AppCompatActivity {
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
-                        if (index != runLocal.size() - 1) {
-                            cav(addLatLng(runLocal.get(index), runLocal.get(index + 1)), Integer.parseInt(runLocal.get(index + 1).getSource()));
+                        if (index != runLocal.size()-1 ) {
+
+                            cav(addLatLng(runLocal.get(index), runLocal.get(index+1)), Integer.parseInt(runLocal.get(index).getSource()));
                         } else {
                             Message message2 = new Message();
                             Bundle bundle2 = new Bundle();
@@ -620,21 +640,21 @@ public class BMapActivity extends AppCompatActivity {
                     }
                 } else {
                     list_cav.add(latLng.get(cav_index));
-                    if (cav_index<latLng.size()-1) {
+                    if (cav_index < latLng.size() - 1) {
                         Point pt = mBaiduMap.getMapStatus().targetScreen;
-                        Point point = mBaiduMap.getProjection().toScreenLocation(latLng.get(cav_index+1));
+                        Point point = mBaiduMap.getProjection().toScreenLocation(latLng.get(cav_index + 1));
                         if (point.x < 0 || point.x > pt.x * 2 || point.y < 0 || point.y > pt.y * 2) {
                             Message message = new Message();
                             Bundle bundle = new Bundle();
                             bundle.putString("type", "4");
-                            bundle.putDouble("lat",latLng.get(cav_index+1).latitude);
-                            bundle.putDouble("lng",latLng.get(cav_index+1).longitude);
+                            bundle.putDouble("lat", latLng.get(cav_index + 1).latitude);
+                            bundle.putDouble("lng", latLng.get(cav_index + 1).longitude);
                             message.setData(bundle);
                             myHandler.sendMessage(message);
-                            Log.d("TAG","即使祭祀时啊");
                         }
                     }
                     marker.setPosition(latLng.get(cav_index));
+
                     if (cav_polyline == null) {
                         cav_polyline = (Polyline) mBaiduMap.addOverlay(new PolylineOptions().width(10).points(list_cav).dottedLine(true).customTextureList(runBitmap).textureIndex(list_cav_int));//画线
                     } else {
@@ -660,7 +680,7 @@ public class BMapActivity extends AppCompatActivity {
      */
     private void startDot() {
         onClickMarker();
-        markerList=new ArrayList<>();
+        markerList = new ArrayList<>();
         final int count = runLocal.size();
         progressBar.setMax(count);
         btnStart.setOnClickListener(new View.OnClickListener() {
@@ -681,18 +701,18 @@ public class BMapActivity extends AppCompatActivity {
                                 myHandler.sendMessage(message);
                                 return;
                             }
-                            if (STOP_STATE==1){
+                            if (STOP_STATE == 1) {
                                 progressBar.setProgress(0);
-                                markerList=new ArrayList<>();
+                                markerList = new ArrayList<>();
                                 mBaiduMap.clear();
                                 mBaiduMap.setMapStatus(MapStatusUpdateFactory.newMapStatus(new MapStatus.Builder().zoom(18f).build()));//定义层级
                                 mBaiduMap.setMapStatus(MapStatusUpdateFactory.newLatLng(getLatLng(runLocal.get(0))));//定位显示到初始地点
                                 //marker = (Marker) mBaiduMap.addOverlay(new MarkerOptions().position(getLatLng(runLocal.get(0))).icon(BitmapDescriptorFactory.fromResource(icon)));
-                                STOP_STATE=0;
+                                STOP_STATE = 0;
                             }
                             LatLng latLng = getLatLng(runLocal.get(index));
 
-                            if (index<runLocal.size()-1) {
+                            if (index < runLocal.size() - 1) {
                                 Point pt = mBaiduMap.getMapStatus().targetScreen;
                                 Point point = mBaiduMap.getProjection().toScreenLocation(getLatLng(runLocal.get(index + 1)));
                                 if (point.x < 0 || point.x > pt.x * 2 || point.y < 0 || point.y > pt.y * 2) {
@@ -713,20 +733,20 @@ public class BMapActivity extends AppCompatActivity {
                             markerList.add(marker1);
                             markerList.get(index).setIcon(BitmapDescriptorFactory.fromResource(icon));
 
-                            if (index>0){
-                                resource = getGPStoImage(localType(runLocal.get(index-1).getSource()));
+                            if (index > 0) {
+                                resource = getGPStoImage(localType(runLocal.get(index - 1).getSource()));
                                 try {
-                                    if (timeMin > 0 && index >1 && getDateMin(runLocal.get(index - 2).getUpdatetime(), runLocal.get(index-1).getUpdatetime()) > 1) {
+                                    if (timeMin > 0 && index > 1 && getDateMin(runLocal.get(index - 2).getUpdatetime(), runLocal.get(index - 1).getUpdatetime()) > 1) {
                                         resource = R.mipmap.ic_pin_red;
                                     }
                                 } catch (ParseException e) {
                                     e.printStackTrace();
                                 }
-                                markerList.get(index-1).setIcon(BitmapDescriptorFactory.fromResource(resource));
+                                markerList.get(index - 1).setIcon(BitmapDescriptorFactory.fromResource(resource));
                             }
-                            if (index!=0) {
+                            if (index != 0) {
                                 //更新文字信息
-                                mileage += DistanceUtil.getDistance(getLatLng(runLocal.get(index-1)), getLatLng(runLocal.get(index)));
+                                mileage += DistanceUtil.getDistance(getLatLng(runLocal.get(index - 1)), getLatLng(runLocal.get(index)));
                             }
                             StringBuffer sb = new StringBuffer();
                             sb.append("时速：");
@@ -743,10 +763,17 @@ public class BMapActivity extends AppCompatActivity {
                             myHandler.sendMessage(message);
                             index++;
                             progressBar.setProgress(index);//进度条信息
+                            try {
+                                Thread.sleep(500);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
                         }
                     };
                     STATE = 2;
                     btnStart.setImageResource(R.mipmap.btn_pause);
+
+
                     timer.schedule(task, 0, timeSize * 10);
                 } else {
                     timer.cancel();
@@ -764,7 +791,7 @@ public class BMapActivity extends AppCompatActivity {
                 }
                 index = 0;
                 STATE = 1;
-               STOP_STATE=1;
+                STOP_STATE = 1;
             }
         });
     }
@@ -815,7 +842,7 @@ public class BMapActivity extends AppCompatActivity {
                 }
                 try {
                     if (indexMarker != 0)
-                        time=getDateHSM(runLocal.get(indexMarker - 1).getUpdatetime(), runLocal.get(indexMarker).getUpdatetime());
+                        time = getDateHSM(runLocal.get(indexMarker - 1).getUpdatetime(), runLocal.get(indexMarker).getUpdatetime());
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
@@ -831,9 +858,9 @@ public class BMapActivity extends AppCompatActivity {
                         TextView txtTime = view.findViewById(R.id.txt_map_details_time);
                         TextView txtAddress = view.findViewById(R.id.txt_map_details_address);
                         txtDate.setText(runLocal.get(finalIndexMarker).getUpdatetime() + " " + localType(runLocal.get(finalIndexMarker).getSource()));
-                        if (timeMin>0){
+                        if (timeMin > 0) {
                             txtTime.setText(time);
-                        }else{
+                        } else {
                             txtTime.setText("");
                         }
 
@@ -885,12 +912,12 @@ public class BMapActivity extends AppCompatActivity {
     private long getDateMin(String startDate, String endDate) throws ParseException {
         Date date1 = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").parse(startDate);
         Date date2 = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").parse(endDate);
-        long ns=1000;
+        long ns = 1000;
         long nm = ns * 60;
         long nh = nm * 60;
         // 获得两个时间的毫秒时间差异
         long diff = date2.getTime() - date1.getTime();
-        return diff/nm;
+        return diff / nm;
     }
 
     /**
@@ -903,23 +930,23 @@ public class BMapActivity extends AppCompatActivity {
     private String getDateHSM(String startDate, String endDate) throws ParseException {
         Date date1 = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").parse(startDate);
         Date date2 = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").parse(endDate);
-        long ns=1000;
+        long ns = 1000;
         long nm = ns * 60;
         long nh = nm * 60;
         long diff = date2.getTime() - date1.getTime();
 
-        long mm = diff%nh / nm;
+        long mm = diff % nh / nm;
 
-        long hh=diff/nh;
+        long hh = diff / nh;
 
-        long ss=diff%nh%nm/ns;
-        if((mm+hh+ss)==0){
+        long ss = diff % nh % nm / ns;
+        if ((mm + hh + ss) == 0) {
             return "";
-        }else{
-            StringBuffer sb=new StringBuffer("停留时间");
-            if (hh!=0) sb.append(hh+"小时");
-            if (mm!=0) sb.append(mm+"分钟");
-            if (ss!=0) sb.append(ss+"秒");
+        } else {
+            StringBuffer sb = new StringBuffer("停留时间");
+            if (hh != 0) sb.append(hh + "小时");
+            if (mm != 0) sb.append(mm + "分钟");
+            if (ss != 0) sb.append(ss + "秒");
             return sb.toString();
         }
     }
@@ -939,7 +966,7 @@ public class BMapActivity extends AppCompatActivity {
                         .setPositiveButton("确定", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                STOP_STATE=1;
+                                STOP_STATE = 1;
                                 if (showType == 1) {
                                     initDot();
                                     startDot();
@@ -952,20 +979,20 @@ public class BMapActivity extends AppCompatActivity {
                                     isDot = true;
                                     startWire();
                                 }
-                                mileage=0.0;
+                                mileage = 0.0;
                             }
                         })
                         .create()
                         .show();
 
-            }else if (bundle.getString("type").equals("3")){
+            } else if (bundle.getString("type").equals("3")) {
                 mBaiduMap.hideInfoWindow();
-                if (runLocal.size()!=0) {
+                if (runLocal.size() != 0) {
                     mBaiduMap.animateMapStatus(MapStatusUpdateFactory.newLatLng(getLatLng(runLocal.get(index + 1))));
                 }
-            }else if (bundle.getString("type").equals("4")){
+            } else if (bundle.getString("type").equals("4")) {
                 mBaiduMap.hideInfoWindow();
-                LatLng latlng=new LatLng(bundle.getDouble("lat"),bundle.getDouble("lng"));
+                LatLng latlng = new LatLng(bundle.getDouble("lat"), bundle.getDouble("lng"));
                 mBaiduMap.animateMapStatus(MapStatusUpdateFactory.newLatLng(latlng));
             }
             super.handleMessage(msg);
@@ -985,40 +1012,40 @@ public class BMapActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        final List<LocalBean> list=new ArrayList<>();
-         for(LocalBean l:GsonUtil.jsonToList(json, LocalBean.class)){
-                    switch (LOCAL_TYPE){
-                        case 0:{
-                            list.add(l);
-                            break;
-                        }
-                        case 1:{
-                            if (l.getSource().equals("1")){
-                                list.add(l);
-                            }
-                            break;
-                        }
-                        case 2:{
-                            if (l.getSource().equals("3")){
-                                list.add(l);
-                            }
-                            break;
-                        }
-                        case 3:{
-                            if (l.getSource().equals("0") || l.getSource().equals("2")){
-                                list.add(l);
-                            }
-                            break;
-                        }
-                        default:
-                            if (l.getSource().equals("1")){
-                                list.add(l);
-                            }
-                            break;
-                    }
+        final List<LocalBean> list = new ArrayList<>();
+        for (LocalBean l : GsonUtil.jsonToList(json, LocalBean.class)) {
+            switch (LOCAL_TYPE) {
+                case 0: {
+                    list.add(l);
+                    break;
                 }
+                case 1: {
+                    if (l.getSource().equals("1")) {
+                        list.add(l);
+                    }
+                    break;
+                }
+                case 2: {
+                    if (l.getSource().equals("3")) {
+                        list.add(l);
+                    }
+                    break;
+                }
+                case 3: {
+                    if (l.getSource().equals("0") || l.getSource().equals("2")) {
+                        list.add(l);
+                    }
+                    break;
+                }
+                default:
+                    if (l.getSource().equals("1")) {
+                        list.add(l);
+                    }
+                    break;
+            }
+        }
 
-           return list;
+        return list;
     }
 
     @Override
